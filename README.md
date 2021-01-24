@@ -115,13 +115,13 @@ class CarHome extends StatelessWidget {
         ),
         body: Center(
             // child: Text(worldPair.asPascalCase),
-            child: _LifeCycle()),
+            child: CarHomePage()),
       ),
       debugShowCheckedModeBanner: false,
       // theme: ThemeData(primarySwatch: Colors.green),
       routes: {
-        'car_home': (BuildContext context) => _LifeCycle(),
-        'car_list': (BuildContext context) => PageA(),
+        'car_home': (BuildContext context) => CarHomePage(),
+        'car_list': (BuildContext context) => CarList(),
         'car_product': (BuildContext context) => CarTabBar(),
         'car_booking': (BuildContext context) => CarProviderTest(),
         'car_order_detail': (BuildContext context) => Layout(),
@@ -132,6 +132,73 @@ class CarHome extends StatelessWidget {
   }
 }
 ```
+
+## 状态
+### Provider
+使用Provider进行状态管理，有三种状态`全局状态` `页面状态` `组件状态(模块状态)`。 `全局状态`跨页面共享，**RN**中的**时间**、**地点**、**用户状态**等是全局共享。
+```dart
+/// [Car]入口文件代码
+/// * [全局状态] MultiProvider 构建全局共享状态
+/// * [页面状态] 构建路由时，使`ChangeNotifierProvider.create`构建
+/// * [组件状态] TODO
+class CarIndex extends StatelessWidget {
+  const CarIndex({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    // PageRouteObserverProvider.of(context).data['initPage'] ?? '/'
+    dynamic parameters;
+
+    return MultiProvider(
+        providers: [
+          ChangeNotifierProvider<CarCommonDateModel>(
+              create: (_) => CarCommonDateModel(context, urlParams: parameters))
+        ],
+        child: MaterialApp(
+          initialRoute: 'car_home_page',
+          routes: {
+            'car_home_page': (BuildContext context) => ChangeNotifierProvider(
+                  create: (_) =>
+                      CarHomePageViewModel(context, urlParams: parameters),
+                  child: CarPage(child: CarHomePage()),
+                ),
+            'car_list_page': (BuildContext context) => ChangeNotifierProvider(
+                  create: (_) =>
+                      CarListPageViewModel(context, urlParams: parameters),
+                  child: CarPage(child: CarListPage()),
+                )
+          },
+        ));
+  }
+}
+
+/// 页面中使用 `Consumer` 获取对象
+class CarHomePage extends StatelessWidget {
+  const CarHomePage({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Home'),
+        centerTitle: true,
+      ),
+      floatingActionButton: Consumer<CarHomePageViewModel>(
+        builder: (context, CarHomePageViewModel model, child) {
+          return FloatingActionButton(
+              onPressed: () => model.increment(), child: Icon(Icons.add));
+        },
+      ),
+      body: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [BodyWidget()]),
+    );
+  }
+}
+
+```
+
 
 ## 概念
 
